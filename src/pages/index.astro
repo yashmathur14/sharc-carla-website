@@ -1,5 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import leadVehicle250ps from '../assets/LeadVehicle_250ps.mp4';
+import leadVehicle5ns from '../assets/LeadVehicle_5ns.mp4';
+import pedestrian250ps from '../assets/Pedestrian_250ps.mp4';
+import pedestrian5ns from '../assets/Pedestrian_5ns.mp4';
+import sharcCarlaDiagram from '../assets/sharc-carla diagram.png';
+import turning250ps from '../assets/Turning_250ps.mp4';
+import turning5ns from '../assets/Turning_5ns.mp4';
 
 const authors = [
 	{ name: 'Shengmin Liu', affiliation: 'University of California, Berkeley' },
@@ -25,26 +32,26 @@ const highlights = [
 
 const scenarios = [
 	{
-		title: 'Unprotected Left Turn',
+		title: 'Intersection Right-Turn',
 		description:
-			'Measure how planning delay changes gap acceptance, braking timing, and near-collision behavior in busy intersections.',
+			'Comparison between high-frequency and low-frequency execution during a right turn through an intersection.',
+		highVideo: turning250ps,
+		lowVideo: turning5ns,
 	},
 	{
-		title: 'Emergency Cut-In',
+		title: 'Lead Vehicle Stop',
 		description:
-			'Study whether delayed perception and planning cause unsafe following responses when a neighboring car abruptly merges.',
+			'Front vehicle braking scenario showing how execution latency changes following and stopping behavior.',
+		highVideo: leadVehicle250ps,
+		lowVideo: leadVehicle5ns,
 	},
 	{
-		title: 'Crosswalk Occlusion',
+		title: 'Pedestrian Crossing',
 		description:
-			'Test how hardware-aware latency affects pedestrian reaction time when detections are partially obstructed and time critical.',
+			'Pedestrian crossing rollout highlighting how delayed computation affects reaction timing near the crosswalk.',
+		highVideo: pedestrian250ps,
+		lowVideo: pedestrian5ns,
 	},
-];
-
-const roadmap = [
-	'Connect SHARC timing outputs to CARLA perception-planning-control execution loops.',
-	'Build repeatable driving scenarios with tunable processor and task-graph parameters.',
-	'Quantify how computational delays shift metrics such as collision rate, comfort, and policy stability.',
 ];
 
 const bibtex = String.raw`@misc{sharcdrive2026,
@@ -105,7 +112,21 @@ const bibtex = String.raw`@misc{sharcdrive2026,
 		<section id="overview" class="mx-auto mt-14 max-w-4xl">
 			<h2 class="text-2xl font-semibold text-zinc-950">Abstract</h2>
 			<p class="mt-4 leading-8 text-zinc-700">
-				Modern autonomous driving systems depend on real-time execution of perception, planning, and control algorithms on integrated onboard computing systems. Open-source simulators such as CARLA capture vehicle and environment dynamics in high fidelity, but typically abstract away how long it takes to process data. SHARC-Drive extends SHARC and integrates it with CARLA to create a hardware-aware simulation framework for systematically studying how computational delays affect autonomous decisions in scenarios where even small timing shifts can cause unsafe actions.
+				In autonomous driving, control algorithms ranging from PID to nonlinear
+				model predictive control (NMPC) must be executed within a strict sample
+				period on embedded processors whose computational resources vary widely.
+				The computation time depends on the microarchitecture, including clock
+				speed, cache size, and pipeline depth, and interacts with the
+				controller's algorithmic complexity in ways that are difficult to predict
+				analytically. This paper presents a co-simulation framework coupling
+				SHARC (Simulator for Hardware Architecture and Real-time Control) with
+				the CARLA driving simulator, enabling systematic evaluation of how
+				hardware and controller design choices jointly affect closed-loop safety.
+			</p>
+			<p class="mt-4 leading-8 text-zinc-700">
+				<strong class="font-semibold text-zinc-900">Index Terms</strong>:
+				Hardware-software co-design, autonomous driving, model predictive
+				control, computational delay, microarchitecture simulation.
 			</p>
 		</section>
 
@@ -126,35 +147,99 @@ const bibtex = String.raw`@misc{sharcdrive2026,
 		<section class="mx-auto mt-12 max-w-4xl">
 			<h2 class="text-2xl font-semibold text-zinc-950">Method Overview</h2>
 			<div class="mt-5 overflow-hidden rounded-lg border border-zinc-300 bg-zinc-50">
-				<div class="flex aspect-[16/9] items-center justify-center text-sm text-zinc-500">
-					System architecture figure placeholder
-				</div>
+				<img
+					class="w-full"
+					src={sharcCarlaDiagram.src}
+					width={sharcCarlaDiagram.width}
+					height={sharcCarlaDiagram.height}
+					alt="SHARC-CARLA system architecture diagram"
+				/>
 			</div>
-			<ol class="mt-5 list-decimal space-y-2 pl-6 leading-8 text-zinc-700">
-				{
-					roadmap.map((item) => (
-						<li>{item}</li>
-					))
-				}
-			</ol>
+			<div class="mt-5 space-y-4 text-base leading-8 text-zinc-700">
+				<p>
+					<strong class="font-semibold text-zinc-900">CARLA</strong> provides
+					high-fidelity driving environments and sensor data, enabling simulation of
+					various scenarios under <strong class="font-semibold text-zinc-900"
+						>deterministic, reproducible conditions</strong
+					>. This makes it possible to evaluate autonomous behavior consistently
+					across repeated runs while varying scenario setup, traffic, and
+					environmental context.
+				</p>
+				<p>
+					<strong class="font-semibold text-zinc-900">SHARC</strong> models
+					multiple processor architectures to evaluate
+					<strong class="font-semibold text-zinc-900"
+						>control execution performance across hardware</strong
+					>. Rather than assuming perception, planning, and control complete
+					instantly, it captures how processor-level timing and execution delay can
+					vary depending on the underlying compute platform.
+				</p>
+				<p>
+					<strong class="font-semibold text-zinc-900"
+						>Integrating both in a closed loop</strong
+					>, we track <strong class="font-semibold text-zinc-900"
+						>control algorithm performance</strong
+					> of the ego vehicle under <strong class="font-semibold text-zinc-900"
+						>hardware constraints</strong
+					>. This lets us study not only what decision the controller makes, but
+					whether that decision is produced in time to remain safe in
+					latency-sensitive driving scenarios.
+				</p>
+			</div>
 		</section>
 
 		<section id="scenarios" class="mx-auto mt-12 max-w-4xl">
 			<h2 class="text-2xl font-semibold text-zinc-950">Qualitative Comparisons</h2>
 			<p class="mt-4 leading-8 text-zinc-700">
-				Use this section for side-by-side scenario rollouts, similar to the reference project pages.
+				Each scenario is shown at the two latency extremes currently included in the dataset: high-frequency execution at 250 ps clock period (4 GHz) and low-frequency execution at 5 ns clock period (200 MHz).
 			</p>
-			<div class="mt-6 grid gap-6 md:grid-cols-3">
+			<div class="mt-6 hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] gap-4 text-center text-sm font-medium text-zinc-700 md:grid">
+				<div></div>
+				<div>High Frequency: 250 ps / 4 GHz</div>
+				<div>Low Frequency: 5 ns / 200 MHz</div>
+			</div>
+			<div class="mt-4 space-y-10">
 				{
 					scenarios.map((scenario) => (
-						<div>
-							<div class="overflow-hidden rounded-lg border border-zinc-300 bg-zinc-50">
-								<div class="flex aspect-[4/3] items-center justify-center text-sm text-zinc-500">
-									Media placeholder
+						<div class="border-t border-zinc-200 pt-6 first:border-t-0 first:pt-0">
+							<div class="md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-4">
+								<div class="md:pr-4">
+									<h3 class="text-lg font-semibold text-zinc-950">{scenario.title}</h3>
+									<p class="mt-2 text-sm leading-7 text-zinc-700">{scenario.description}</p>
+								</div>
+								<div class="mt-4 md:mt-0">
+									<p class="mb-2 text-sm font-medium text-zinc-700 md:hidden">
+										High Frequency: 250 ps / 4 GHz
+									</p>
+									<div class="overflow-hidden rounded-lg border border-zinc-300 bg-black">
+										<video
+											class="aspect-video w-full"
+											src={scenario.highVideo}
+											autoplay
+											muted
+											loop
+											playsinline
+											controls
+										/>
+									</div>
+								</div>
+								<div class="mt-4 md:mt-0">
+									<p class="mb-2 text-sm font-medium text-zinc-700 md:hidden">
+										Low Frequency: 5 ns / 200 MHz
+									</p>
+									<div class="overflow-hidden rounded-lg border border-zinc-300 bg-black">
+										<video
+											class="aspect-video w-full"
+											src={scenario.lowVideo}
+											autoplay
+											muted
+											loop
+											playsinline
+											controls
+										/>
+									</div>
 								</div>
 							</div>
-							<h3 class="mt-3 text-lg font-semibold text-zinc-950">{scenario.title}</h3>
-							<p class="mt-2 text-sm leading-7 text-zinc-700">{scenario.description}</p>
 						</div>
 					))
 				}
